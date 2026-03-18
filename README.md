@@ -1,1 +1,1 @@
-# StreamPass.github.io
+# Streampass.github.io
