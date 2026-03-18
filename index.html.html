@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>StreamPass — Tutti i tuoi abbonamenti</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #080810;
+    --surface:  #0f0f1a;
+    --card:     #14141f;
+    --border:   rgba(255,255,255,0.07);
+    --text:     #e8e8f0;
+    --muted:    rgba(232,232,240,0.45);
+    --accent:   #c8f135;
+    --accent2:  #7b61ff;
+    --radius:   18px;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body:    'DM Sans', sans-serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ─── NOISE OVERLAY ─── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+    background-size: 200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: rgba(8,8,16,0.8);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-size: 28px;
+    letter-spacing: 2px;
+    color: var(--accent);
+  }
+
+  nav ul { list-style: none; display: flex; gap: 36px; }
+  nav a { color: var(--muted); text-decoration: none; font-size: 14px; font-weight: 500; transition: color .2s; }
+  nav a:hover { color: var(--text); }
+
+  .btn-nav {
+    background: var(--accent);
+    color: #080810;
+    padding: 10px 24px;
+    border-radius: 100px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: opacity .2s, transform .15s;
+  }
+  .btn-nav:hover { opacity: .85; transform: translateY(-1px); }
+
+  /* ─── HERO ─── */
+  .hero {
+    position: relative;
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 140px 48px 80px;
+    overflow: hidden;
+  }
+
+  /* Blob BG */
+  .blob {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.35;
+    pointer-events: none;
+  }
+  .blob-1 { width: 600px; height: 600px; background: var(--accent2); top: -100px; right: -100px; }
+  .blob-2 { width: 400px; height: 400px; background: var(--accent); bottom: 0; left: 20%; opacity: 0.15; }
+
+  .hero-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 700px;
+  }
+
+  .badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(200,241,53,0.12);
+    border: 1px solid rgba(200,241,53,0.3);
+    color: var(--accent);
+    padding: 6px 16px;
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 32px;
+    letter-spacing: .5px;
+  }
+  .badge::before { content: '●'; font-size: 8px; animation: pulse 2s infinite; }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(72px, 10vw, 130px);
+    line-height: .95;
+    letter-spacing: 2px;
+    margin-bottom: 28px;
+  }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+
+  .hero p {
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 480px;
+    margin-bottom: 48px;
+    line-height: 1.7;
+  }
+
+  .hero-cta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #080810;
+    padding: 16px 36px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: transform .2s, opacity .2s;
+    display: inline-block;
+  }
+  .btn-primary:hover { transform: translateY(-2px); opacity: .9; }
+
+  .btn-ghost {
+    color: var(--muted);
+    font-size: 14px;
+    text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: color .2s;
+  }
+  .btn-ghost:hover { color: var(--text); }
+  .btn-ghost::after { content: '→'; }
+
+  /* floating platform logos */
+  .hero-logos {
+    position: absolute;
+    right: 48px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 16px;
+    z-index: 1;
+  }
+  .logo-pill {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    animation: float 4s ease-in-out infinite;
+    cursor: default;
+  }
+  .logo-pill:nth-child(2) { animation-delay: .6s; }
+  .logo-pill:nth-child(3) { animation-delay: 1.2s; }
+  .logo-pill:nth-child(4) { animation-delay: 1.8s; }
+
+  @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+
+  .logo-dot { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .dot-netflix  { background: #E50914; color: #fff; }
+  .dot-amazon   { background: #00A8E1; color: #fff; }
+  .dot-spotify  { background: #1DB954; color: #fff; }
+  .dot-disney   { background: #113CCF; color: #fff; }
+
+  /* ─── STATS ─── */
+  .stats {
+    position: relative; z-index: 1;
+    padding: 0 48px 80px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .stat-item {
+    background: var(--bg);
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 56px;
+    color: var(--accent);
+    line-height: 1;
+    letter-spacing: 1px;
+  }
+  .stat-label { color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+  /* ─── PLATFORMS ─── */
+  .section { padding: 100px 48px; position: relative; z-index: 1; }
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(40px, 5vw, 68px);
+    line-height: 1;
+    letter-spacing: 1px;
+    margin-bottom: 60px;
+  }
+
+  .platforms-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .platform-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 36px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .3s, transform .3s;
+    cursor: pointer;
+  }
+  .platform-card:hover {
+    transform: translateY(-4px);
+  }
+  .platform-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    transition: opacity .3s;
+    opacity: 0;
+  }
+  .platform-card:hover::before { opacity: 1; }
+  .netflix-card::before  { background: #E50914; }
+  .amazon-card::before   { background: #00A8E1; }
+  .spotify-card::before  { background: #1DB954; }
+  .disney-card::before   { background: #113CCF; }
+
+  .netflix-card:hover  { border-color: rgba(229,9,20,0.4); }
+  .amazon-card:hover   { border-color: rgba(0,168,225,0.4); }
+  .spotify-card:hover  { border-color: rgba(29,185,84,0.4); }
+  .disney-card:hover   { border-color: rgba(17,60,207,0.4); }
+
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+  .card-logo-big {
+    width: 48px; height: 48px; border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; font-weight: 700;
+  }
+  .card-tag {
+    font-size: 11px; font-weight: 500; letter-spacing: 1px;
+    text-transform: uppercase; padding: 5px 12px;
+    border-radius: 100px; border: 1px solid var(--border);
+    color: var(--muted);
+  }
+  .card-name { font-family: var(--font-display); font-size: 32px; letter-spacing: 1px; margin-bottom: 8px; }
+  .card-desc { color: var(--muted); font-size: 14px; line-height: 1.6; margin-bottom: 28px; }
+
+  .plan-row {
+    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px;
+  }
+  .plan-chip {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 16px;
+    text-align: center;
+    flex: 1; min-width: 80px;
+    transition: background .2s, border-color .2s;
+  }
+  .plan-chip:hover { background: rgba(255,255,255,0.09); }
+  .plan-chip-name { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+  .plan-chip-price { font-family: var(--font-display); font-size: 22px; letter-spacing: .5px; }
+
+  .netflix-price  { color: #E50914; }
+  .amazon-price   { color: #00A8E1; }
+  .spotify-price  { color: #1DB954; }
+  .disney-price   { color: #113CCF; }
+
+  .btn-buy {
+    display: block; width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px; font-weight: 500;
+    text-align: center;
+    cursor: pointer;
+    transition: background .2s, border-color .2s, transform .15s;
+    text-decoration: none;
+  }
+  .btn-buy:hover { background: rgba(255,255,255,0.09); transform: translateY(-1px); }
+
+  /* ─── HOW IT WORKS ─── */
+  .how-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 40px;
+  }
+  .how-step { }
+  .step-num {
+    font-family: var(--font-display);
+    font-size: 80px;
+    color: rgba(200,241,53,0.12);
+    line-height: 1;
+    margin-bottom: 16px;
+  }
+  .step-title { font-size: 18px; font-weight: 500; margin-bottom: 10px; }
+  .step-desc { color: var(--muted); font-size: 14px; line-height: 1.7; }
+
+  /* ─── FAQ ─── */
+  .faq-list { max-width: 720px; }
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 24px 0;
+  }
+  .faq-q {
+    font-size: 16px; font-weight: 500;
+    cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 16px;
+    user-select: none;
+  }
+  .faq-q::after { content: '+'; color: var(--accent); font-size: 24px; flex-shrink: 0; transition: transform .3s; }
+  .faq-item.open .faq-q::after { transform: rotate(45deg); }
+  .faq-a {
+    color: var(--muted); font-size: 14px; line-height: 1.7;
+    max-height: 0; overflow: hidden; transition: max-height .4s, padding .3s;
+  }
+  .faq-item.open .faq-a { max-height: 200px; padding-top: 14px; }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px 48px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: relative; z-index: 1;
+  }
+  footer .logo { font-size: 22px; }
+  footer p { color: var(--muted); font-size: 13px; }
+
+  /* ─── ANIMATIONS ─── */
+  .reveal { opacity: 0; transform: translateY(30px); transition: opacity .7s, transform .7s; }
+  .reveal.visible { opacity: 1; transform: none; }
+
+  @media (max-width: 900px) {
+    nav { padding: 16px 24px; }
+    nav ul { display: none; }
+    .hero { padding: 120px 24px 60px; }
+    .hero-logos { display: none; }
+    .stats { grid-template-columns: repeat(2,1fr); padding: 0; }
+    .section { padding: 60px 24px; }
+    .platforms-grid { grid-template-columns: 1fr; }
+    .how-grid { grid-template-columns: 1fr; gap: 24px; }
+    footer { flex-direction: column; gap: 12px; text-align: center; padding: 32px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">STREAMPASS</div>
+  <ul>
+    <li><a href="#piattaforme">Piattaforme</a></li>
+    <li><a href="#come-funziona">Come funziona</a></li>
+    <li><a href="#faq">FAQ</a></li>
+  </ul>
+  <a href="#piattaforme" class="btn-nav">Acquista ora</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+
+  <div class="hero-inner">
+    <div class="badge">Consegna immediata · 100% digitale</div>
+    <h1>TUTTO IL<br/>MEGLIO<br/>DELLO <em>STREAMING</em></h1>
+    <p>Netflix, Amazon Prime, Spotify e Disney+ a prezzi imbattibili. Attivazione istantanea, assistenza 24/7.</p>
+    <div class="hero-cta">
+      <a href="#piattaforme" class="btn-primary">Scegli il tuo piano</a>
+      <a href="#come-funziona" class="btn-ghost">Come funziona</a>
+    </div>
+  </div>
+
+  <div class="hero-logos">
+    <div class="logo-pill"><div class="logo-dot dot-netflix">N</div> Netflix</div>
+    <div class="logo-pill"><div class="logo-dot dot-amazon">A</div> Amazon Prime</div>
+    <div class="logo-pill"><div class="logo-dot dot-spotify">♫</div> Spotify</div>
+    <div class="logo-pill"><div class="logo-dot dot-disney">D</div> Disney+</div>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-item reveal">
+    <div class="stat-num">12K+</div>
+    <div class="stat-label">Clienti soddisfatti</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">4</div>
+    <div class="stat-label">Piattaforme disponibili</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">&lt;2min</div>
+    <div class="stat-label">Tempo di attivazione</div>
+  </div>
+  <div class="stat-item reveal">
+    <div class="stat-num">24/7</div>
+    <div class="stat-label">Supporto clienti</div>
+  </div>
+</div>
+
+<!-- PIATTAFORME -->
+<section class="section" id="piattaforme">
+  <div class="section-label">Le nostre offerte</div>
+  <div class="section-title reveal">SCEGLI<br/>LA TUA<br/>PIATTAFORMA</div>
+
+  <div class="platforms-grid">
+
+    <!-- Netflix -->
+    <div class="platform-card netflix-card reveal">
+      <div class="card-header">
+        <div class="card-logo-big dot-netflix">N</div>
+        <span class="card-tag">Più venduto</span>
+      </div>
+      <div class="card-name">Netflix</div>
+      <div class="card-desc">Film, serie TV, documentari e molto altro. Guarda ovunque, quando vuoi, senza interruzioni pubblicitarie.</div>
+      <div class="plan-row">
+        <div class="plan-chip">
+          <div class="plan-chip-name">1 Mese</div>
+          <div class="plan-chip-price netflix-price">4.90€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">3 Mesi</div>
+          <div class="plan-chip-price netflix-price">12€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">12 Mesi</div>
+          <div class="plan-chip-price netflix-price">39€</div>
+        </div>
+      </div>
+      <a href="#" class="btn-buy">Acquista Netflix →</a>
+    </div>
+
+    <!-- Amazon -->
+    <div class="platform-card amazon-card reveal">
+      <div class="card-header">
+        <div class="card-logo-big dot-amazon">A</div>
+        <span class="card-tag">Include Prime</span>
+      </div>
+      <div class="card-name">Amazon Prime</div>
+      <div class="card-desc">Prime Video + spedizioni gratuite + Prime Music. L'abbonamento che include tutto in un unico piano.</div>
+      <div class="plan-row">
+        <div class="plan-chip">
+          <div class="plan-chip-name">1 Mese</div>
+          <div class="plan-chip-price amazon-price">3.50€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">3 Mesi</div>
+          <div class="plan-chip-price amazon-price">9€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">12 Mesi</div>
+          <div class="plan-chip-price amazon-price">29€</div>
+        </div>
+      </div>
+      <a href="#" class="btn-buy">Acquista Amazon Prime →</a>
+    </div>
+
+    <!-- Spotify -->
+    <div class="platform-card spotify-card reveal">
+      <div class="card-header">
+        <div class="card-logo-big dot-spotify">♫</div>
+        <span class="card-tag">No pubblicità</span>
+      </div>
+      <div class="card-name">Spotify</div>
+      <div class="card-desc">100 milioni di brani, podcast e audiolibri. Ascolto offline incluso, qualità audio massima.</div>
+      <div class="plan-row">
+        <div class="plan-chip">
+          <div class="plan-chip-name">1 Mese</div>
+          <div class="plan-chip-price spotify-price">3.90€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">3 Mesi</div>
+          <div class="plan-chip-price spotify-price">10€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">12 Mesi</div>
+          <div class="plan-chip-price spotify-price">33€</div>
+        </div>
+      </div>
+      <a href="#" class="btn-buy">Acquista Spotify →</a>
+    </div>
+
+    <!-- Disney+ -->
+    <div class="platform-card disney-card reveal">
+      <div class="card-header">
+        <div class="card-logo-big dot-disney">D+</div>
+        <span class="card-tag">Star incluso</span>
+      </div>
+      <div class="card-name">Disney+</div>
+      <div class="card-desc">Disney, Marvel, Star Wars, Pixar e Star. Il catalogo più amato dalle famiglie e dagli appassionati di supereroi.</div>
+      <div class="plan-row">
+        <div class="plan-chip">
+          <div class="plan-chip-name">1 Mese</div>
+          <div class="plan-chip-price disney-price">4.20€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">3 Mesi</div>
+          <div class="plan-chip-price disney-price">11€</div>
+        </div>
+        <div class="plan-chip">
+          <div class="plan-chip-name">12 Mesi</div>
+          <div class="plan-chip-price disney-price">35€</div>
+        </div>
+      </div>
+      <a href="#" class="btn-buy">Acquista Disney+ →</a>
+    </div>
+
+  </div>
+</section>
+
+<!-- COME FUNZIONA -->
+<section class="section" id="come-funziona" style="background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+  <div class="section-label">Semplice e veloce</div>
+  <div class="section-title reveal">COME<br/>FUNZIONA</div>
+  <div class="how-grid">
+    <div class="how-step reveal">
+      <div class="step-num">01</div>
+      <div class="step-title">Scegli il piano</div>
+      <div class="step-desc">Seleziona la piattaforma e la durata che preferisci. Puoi anche combinare più abbonamenti.</div>
+    </div>
+    <div class="how-step reveal">
+      <div class="step-num">02</div>
+      <div class="step-title">Paga in sicurezza</div>
+      <div class="step-desc">Pagamento con carta, PayPal o crypto. Transazione criptata e protetta al 100%.</div>
+    </div>
+    <div class="how-step reveal">
+      <div class="step-num">03</div>
+      <div class="step-title">Attiva subito</div>
+      <div class="step-desc">Ricevi via email le credenziali entro 2 minuti dall'acquisto. Inizia a guardare immediatamente.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section" id="faq">
+  <div class="section-label">Hai dubbi?</div>
+  <div class="section-title reveal">FAQ</div>
+  <div class="faq-list">
+    <div class="faq-item reveal">
+      <div class="faq-q">Come ricevo l'abbonamento dopo il pagamento?</div>
+      <div class="faq-a">Riceverai un'email con le credenziali di accesso entro 2 minuti dall'acquisto. Controlla anche la cartella spam se non la trovi nella posta in arrivo.</div>
+    </div>
+    <div class="faq-item reveal">
+      <div class="faq-q">Gli abbonamenti sono legali?</div>
+      <div class="faq-a">Sì, lavoriamo con account verificati e piani condivisi nei limiti consentiti dai termini di servizio delle piattaforme.</div>
+    </div>
+    <div class="faq-item reveal">
+      <div class="faq-q">Posso acquistare più abbonamenti insieme?</div>
+      <div class="faq-a">Assolutamente sì. Puoi aggiungere al carrello tutte le piattaforme che desideri e pagare in un'unica transazione.</div>
+    </div>
+    <div class="faq-item reveal">
+      <div class="faq-q">Cosa succede se l'account non funziona?</div>
+      <div class="faq-a">Garantiamo assistenza 24/7. In caso di problemi ti sostituiamo l'account entro poche ore senza costi aggiuntivi.</div>
+    </div>
+    <div class="faq-item reveal">
+      <div class="faq-q">Come posso contattare il supporto?</div>
+      <div class="faq-a">Puoi scriverci su Telegram, Discord o via email. Il nostro team risponde mediamente entro 15 minuti.</div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="logo">STREAMPASS</div>
+  <p>© 2025 StreamPass · Tutti i diritti riservati</p>
+  <p style="color:var(--muted); font-size:12px;">Privacy Policy · Termini di servizio</p>
+</footer>
+
+<script>
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(r => obs.observe(r));
+
+  // FAQ accordion
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      const item = q.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+</script>
+</body>
+</html>
